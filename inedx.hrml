@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Smart-Check · Результаты сканирования</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif; }
+    body {
+      background: #f5f8fb;
+      display: flex;
+      justify-content: center;
+      padding: 16px;
+    }
+    .app {
+      width: 360px;
+      max-width: 100%;
+      background: #ffffff;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+      display: flex;
+      flex-direction: column;
+      height: 640px;
+    }
+    .app-header {
+      background: linear-gradient(135deg, #0094ff, #005bff);
+      color: #fff;
+      padding: 16px 20px 14px;
+    }
+    .app-header-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .app-header-sub {
+      font-size: 13px;
+      opacity: 0.9;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .chip {
+      background: rgba(255,255,255,0.18);
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-size: 11px;
+    }
+
+    .app-tabs {
+      display: flex;
+      padding: 8px 12px 10px;
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      gap: 8px;
+    }
+    .tab {
+      flex: 1;
+      padding: 6px 0;
+      border-radius: 999px;
+      font-size: 12px;
+      text-align: center;
+      border: 1px solid transparent;
+      color: #4a5568;
+      cursor: pointer;
+      user-select: none;
+    }
+    .tab.active {
+      background: #ebf4ff;
+      border-color: #3b82f6;
+      color: #1d4ed8;
+      font-weight: 600;
+    }
+
+    .app-body {
+      padding: 10px 14px 14px;
+      overflow-y: auto;
+      background: #f5f8fb;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #111827;
+    }
+    .card-sub {
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    .status-pill {
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .status-pill.red { background: #fee2e2; color: #b91c1c; }
+    .status-pill.orange { background: #ffedd5; color: #c05621; }
+    .status-pill.green { background: #dcfce7; color: #166534; }
+
+    .summary-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 4px;
+    }
+    .summary-main-left {
+      font-size: 24px;
+      font-weight: 700;
+      color: #111827;
+    }
+    .summary-main-right {
+      font-size: 11px;
+      text-align: right;
+      color: #4b5563;
+    }
+
+    .tag-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+    .tag {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #f3f4f6;
+      color: #4b5563;
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 8px;
+      font-size: 11px;
+      margin-bottom: 6px;
+      color: #4b5563;
+    }
+    .filter-row label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+    }
+
+    .group-card {
+      border-left-width: 3px;
+      border-left-style: solid;
+    }
+    .group-critical { border-left-color: #ef4444; }
+    .group-important { border-left-color: #f97316; }
+    .group-info { border-left-color: #60a5fa; }
+
+    .error-item {
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      padding: 8px 10px;
+      margin-top: 8px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .error-item:hover {
+      background: #f9fafb;
+      border-color: #cbd5f5;
+    }
+    .error-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+    }
+    .error-code {
+      font-weight: 600;
+      color: #1f2933;
+    }
+    .error-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .error-badge.crit { background: #fee2e2; color: #b91c1c; }
+    .error-badge.imp { background: #ffedd5; color: #c05621; }
+    .error-badge.info { background: #e5edff; color: #3749ac; }
+
+    .error-title {
+      font-size: 11px;
+      color: #4b5563;
+      margin-top: 2px;
+    }
+    .error-details {
+      margin-top: 6px;
+      font-size: 11px;
+      color: #4b5563;
+      display: none;
+    }
+    .error-details p { margin-bottom: 4px; }
+
+    .error-item.open .error-details {
+      display: block;
+    }
+
+    .cta-card {
+      background: linear-gradient(135deg, #111827, #1f2937);
+      color: #f9fafb;
+      border-radius: 20px;
+      padding: 14px 16px;
+      margin-top: 4px;
+    }
+    .cta-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .cta-sub {
+      font-size: 12px;
+      opacity: 0.9;
+      margin-bottom: 8px;
+    }
+    .cta-perks {
+      font-size: 11px;
+      margin-bottom: 10px;
+    }
+    .cta-perks li {
+      margin-left: 14px;
+      margin-bottom: 3px;
+    }
+    .cta-buttons {
+      display: flex;
+      gap: 8px;
+    }
+    .btn {
+      flex: 1;
+      font-size: 12px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .btn-primary {
+      background: #f97316;
+      color: #111827;
+    }
+    .btn-secondary {
+      background: transparent;
+      color: #e5e7eb;
+      border: 1px solid rgba(249,250,251,0.25);
+    }
+
+    .footer-note {
+      font-size: 10px;
+      color: #6b7280;
+      text-align: center;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <div class="app-header-title">Smart-Check · Результаты</div>
+      <div class="app-header-sub">
+        <span>Hyundai Solaris · VIN ***4521</span>
+        <span class="chip">Сегодня · 14:26</span>
+      </div>
+    </header>
+
+    <div class="app-tabs">
+      <div class="tab active">Ошибки</div>
+      <div class="tab">Рекомендации</div>
+      <div class="tab">История</div>
+    </div>
+
+    <main class="app-body">
+      <!-- Итоговая карточка -->
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Общий статус автомобиля</div>
+            <div class="card-sub">3 проблемы, 1 критическая</div>
+          </div>
+          <span class="status-pill red">Требует внимания</span>
+        </div>
+        <div class="summary-main">
+          <div class="summary-main-left">Smart-Check</div>
+          <div class="summary-main-right">
+            Рекомендуем визит<br>
+            в сервис в течение 7 дней
+          </div>
+        </div>
+        <div class="tag-row">
+          <span class="tag">Пробег: 84 200 км</span>
+          <span class="tag">Проверено: OBD-II · 12 систем</span>
+          <span class="tag">G+ скидка на сервис до −10%</span>
+        </div>
+      </section>
+
+      <!-- Фильтры -->
+      <section class="card">
+        <div class="card-header">
+          <div class="card-title">Фильтр ошибок</div>
+        </div>
+        <div class="filter-row">
+          <label><input type="checkbox" id="filter-critical" checked /> Критичные</label>
+          <label><input type="checkbox" id="filter-important" checked /> Важно проверить</label>
+          <label><input type="checkbox" id="filter-info" checked /> Инфо</label>
+        </div>
+        <div class="card-sub">Нажмите на ошибку, чтобы увидеть интерпретацию и советы.</div>
+      </section>
+
+      <!-- Критичные -->
+      <section class="card group-card group-critical" data-group="critical">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Критичные (1)</div>
+            <div class="card-sub">Рекомендуем как можно скорее посетить сервис</div>
+          </div>
+          <span class="status-pill red">Важно</span>
+        </div>
+
+        <div class="error-item" data-level="critical">
+          <div class="error-header">
+            <span class="error-code">P0301</span>
+            <span class="error-badge crit">Критично</span>
+          </div>
+          <div class="error-title">Пропуски зажигания в цилиндре 1</div>
+          <div class="error-details">
+            <p><strong>Что это значит:</strong> топливо в цилиндре сгорает не полностью. Возможна вибрация двигателя, потеря мощности.</p>
+            <p><strong>Можно ли ехать:</strong> Да, на короткое расстояние с пониженной нагрузкой, но лучше не откладывать визит.</p>
+            <p><strong>Рекомендация:</strong> Проверить свечи, катушку зажигания, катализатор. Мы подобрали сервис-партнёр рядом с вами.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Важно -->
+      <section class="card group-card group-important" data-group="important">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Важно проверить (1)</div>
+            <div class="card-sub">Желательно записаться в сервис в течение недели</div>
+          </div>
+          <span class="status-pill orange">Средний риск</span>
+        </div>
+
+        <div class="error-item" data-level="important">
+          <div class="error-header">
+            <span class="error-code">P0420</span>
+            <span class="error-badge imp">Важно</span>
+          </div>
+          <div class="error-title">Эффективность катализатора ниже порога</div>
+          <div class="error-details">
+            <p><strong>Что это значит:</strong> система контроля выхлопа работает неэффективно, возрастает расход топлива и нагрузка на двигатель.</p>
+            <p><strong>Можно ли ехать:</strong> Да, но при затяжной эксплуатации риск повреждения катализатора и других компонентов.</p>
+            <p><strong>Рекомендация:</strong> Диагностика выхлопной системы, проверка лямбда-зондов и утечек.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Инфо -->
+      <section class="card group-card group-info" data-group="info">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Информационные (1)</div>
+            <div class="card-sub">Следите за поведением автомобиля</div>
+          </div>
+          <span class="status-pill green">Можно ехать</span>
+        </div>
+
+        <div class="error-item" data-level="info">
+          <div class="error-header">
+            <span class="error-code">P0116</span>
+            <span class="error-badge info">Инфо</span>
+          </div>
+          <div class="error-title">Датчик температуры ОЖ — некорректный сигнал</div>
+          <div class="error-details">
+            <p><strong>Что это значит:</strong> ЭБУ получает «плавающие» данные по температуре двигателя. Возможен повышенный расход топлива и сложный холодный запуск.</p>
+            <p><strong>Можно ли ехать:</strong> Да, но при повторении ошибки рекомендуем диагностику.</p>
+            <p><strong>Рекомендация:</strong> Проверить датчик температуры, разъёмы и уровень охлаждающей жидкости.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA сервис-партнёра -->
+      <section class="cta-card">
+        <div class="cta-title">Решить проблему у сервиса-партнёра</div>
+        <div class="cta-sub">
+          Партнёр G-Service на АЗС «Газпром нефть» в 3,2 км от вас.
+        </div>
+        <ul class="cta-perks">
+          <li>Комплексная диагностика двигателя и выхлопа — от 1 990 ₽</li>
+          <li>Подписчикам G+ — скидка 10% и бесплатная проверка свечей</li>
+          <li>Оплата в приложении, накопление бонусов G-Drive</li>
+        </ul>
+        <div class="cta-buttons">
+          <button class="btn btn-primary" onclick="bookService()">Записаться в сервис</button>
+          <button class="btn btn-secondary" onclick="routeToService()">Маршрут до сервиса</button>
+        </div>
+        <div class="footer-note">
+          Результаты сканирования носят справочный характер и не заменяют полноценную диагностику.
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // раскрытие ошибок
+    document.querySelectorAll('.error-item').forEach(function(item) {
+      item.addEventListener('click', function() {
+        item.classList.toggle('open');
+      });
+    });
+
+    // фильтры по уровню
+    function applyFilters() {
+      const showCritical = document.getElementById('filter-critical').checked;
+      const showImportant = document.getElementById('filter-important').checked;
+      const showInfo = document.getElementById('filter-info').checked;
+
+      document.querySelectorAll('.error-item').forEach(function(item) {
+        const level = item.dataset.level;
+        let visible = true;
+        if (level === 'critical' && !showCritical) visible = false;
+        if (level === 'important' && !showImportant) visible = false;
+        if (level === 'info' && !showInfo) visible = false;
+        item.style.display = visible ? 'block' : 'none';
+      });
+
+      // при скрытии всех ошибок группы визуально всё равно остаются, чтобы не рушить макет
+    }
+
+    ['filter-critical', 'filter-important', 'filter-info'].forEach(function(id) {
+      document.getElementById(id).addEventListener('change', applyFilters);
+    });
+    applyFilters();
+
+    function bookService() {
+      alert('Открыть экран записи: выбор сервиса-партнёра, времени и оплаты G+.');
+    }
+    function routeToService() {
+      alert('Открыть карту с маршрутом до ближайшего сервиса-партнёра.');
+    }
+  </script>
+</body>
+</html>
